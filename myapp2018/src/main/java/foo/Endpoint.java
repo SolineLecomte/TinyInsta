@@ -14,6 +14,8 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.KeyFactory;
+
 import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
 import com.google.appengine.api.datastore.Query.CompositeFilter;
 import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
@@ -30,15 +32,46 @@ public class Endpoint {
 	
 	
 	@ApiMethod(name = "addUser", httpMethod = HttpMethod.POST, path ="addUser")
-	public Entity addUser(@Named("name") String name) {
+	public Entity addUser(@Named("name") String name,@Named("email") String email,@Named("username") String username,@Named("password") String password) throws Exception {
 			
-			Entity e = new Entity("Person", ""+name);
-			e.setProperty("name", name);
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-			DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-			datastore.put(e);
-			
-			return  e;
+		//Check if username is available
+		Query q =
+			    new Query("User")
+			        .setFilter(new FilterPredicate("__key__" , FilterOperator.EQUAL, KeyFactory.createKey("User", username))); 
+		PreparedQuery pq = datastore.prepare(q);
+		int usernameAlreadyTaken = pq.countEntities(FetchOptions.Builder.withLimit(1));
+		
+		
+		//Check if email address is already in use
+		Query q2 =
+			    new Query("User")
+			        .setFilter(new FilterPredicate("__key__" , FilterOperator.EQUAL, KeyFactory.createKey("User", email))); 
+		PreparedQuery pq2 = datastore.prepare(q);
+		int mailAlreadyTaken = pq.countEntities(FetchOptions.Builder.withLimit(1));
+
+		if(usernameAlreadyTaken!=0) {
+			throw new Exception("Username already taken");
+		}
+		
+		if(mailAlreadyTaken!=0) {
+			throw new Exception("This email adress is already in use");
+		}
+		
+		
+		Entity e = new Entity("User", username);
+		e.setProperty("name", name);
+		e.setProperty("email", email);
+		e.setProperty("username", username);
+		e.setProperty("password", password);
+		
+		
+		
+
+		datastore.put(e);
+		
+		return  e;
 	}
 	
 	

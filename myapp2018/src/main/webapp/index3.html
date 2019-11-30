@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>First App Mythrill</title>
+<title>First App Mythril</title>
 </head>
 <body>
 
@@ -29,18 +29,29 @@
 		                    e.preventDefault()
 		                    m.request({
 					method: "POST",
-		            url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/addUser?name="+nom,
+		            url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/addUser?name="+name+"&email="+email+"&username="+username+"&password="+password,
 				}).then(function(result) {
 					console.log("ok")
 				})
 		              
 		                }
 		            }, [
-		            	m("label.label", "Nom"),
-		                m("input.input[type=text][placeholder=nom]", {
-		                    oninput: function (e) {nom = e.target.value},
+		            	m("label.label", "Email"),
+		                m("input.input[type=text][placeholder=email]", {
+		                    oninput: function (e) {email = e.target.value},
 		                }),
-		            m("button.button[type=submit]", "Save"),
+		                m("label.label", "Name"),
+		                m("input.input[type=text][placeholder=Full Name]", {
+		                    oninput: function (e) {name = e.target.value},
+		                }),
+		                m("label.label", "Username"),
+		                m("input.input[type=text][placeholder=Username]", {
+		                    oninput: function (e) {username = e.target.value},
+		                }),m("label.label", "Password"),
+		                m("input.input[type=password][placeholder=Password]", {
+		                    oninput: function (e) {password = e.target.value},
+		                }),
+		            m("button.button[type=submit]", "Sign up"),
 		        ])
 		    }
 	}
