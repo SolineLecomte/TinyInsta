@@ -30,7 +30,6 @@ version = "v1")
 
 public class Endpoint {
 	
-	
 	@ApiMethod(name = "addUser", httpMethod = HttpMethod.POST, path ="addUser")
 	public Entity addUser(@Named("name") String name,@Named("email") String email,@Named("username") String username,@Named("password") String password) throws Exception {
 			
@@ -42,7 +41,6 @@ public class Endpoint {
 			        .setFilter(new FilterPredicate("__key__" , FilterOperator.EQUAL, KeyFactory.createKey("User", username))); 
 		PreparedQuery pq = datastore.prepare(q);
 		int usernameAlreadyTaken = pq.countEntities(FetchOptions.Builder.withLimit(1));
-		
 		
 		//Check if email address is already in use
 		Query q2 =
@@ -59,19 +57,66 @@ public class Endpoint {
 			throw new Exception("This email adress is already in use");
 		}
 		
-		
 		Entity e = new Entity("User", username);
 		e.setProperty("name", name);
 		e.setProperty("email", email);
 		e.setProperty("username", username);
 		e.setProperty("password", password);
-		
-		
-		
 
 		datastore.put(e);
 		
-		return  e;
+		return new Entity("Response", "userVerified");
+	}
+	
+	
+
+	
+	
+	@ApiMethod(name = "verifyUser", httpMethod = HttpMethod.POST, path ="verifyUser")
+	public Entity verifyUser(@Named("username") String username,@Named("password") String password) throws Exception {
+						
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+		//Get the User Entity with corresponding pseudo
+				Query q =
+				    new Query("User")
+				        .setFilter(new FilterPredicate("__key__" , FilterOperator.EQUAL, KeyFactory.createKey("User", username)));
+
+				PreparedQuery pq = datastore.prepare(q);
+				Entity user = pq.asSingleEntity();
+				
+				//Verify the password
+				String registeredPassword = (String) user.getProperty("password");
+				boolean isCorrectPassword = (password.equals(registeredPassword));
+				
+				if (isCorrectPassword) {
+					return new Entity("Response", "userVerified");
+				} else {
+					throw new Exception("Bad password");
+				}
+				
+
+	}
+	
+	@ApiMethod(name = "timeline", httpMethod = HttpMethod.POST, path ="timeline")
+	public Entity showTimeline() {
+			
+		return new Entity("Response", "ok");
+	}
+	
+	
+	@ApiMethod(name = "getUser", httpMethod = HttpMethod.POST, path ="getUser")
+	public Entity getUser(@Named("username") String username) {
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+		Query q =
+			    new Query("User")
+			        .setFilter(new FilterPredicate("__key__" , FilterOperator.EQUAL, KeyFactory.createKey("User", username)));
+
+			PreparedQuery pq = datastore.prepare(q);
+			Entity user = pq.asSingleEntity();
+			
+		return user;
 	}
 	
 	

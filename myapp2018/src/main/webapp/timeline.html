@@ -14,11 +14,25 @@
 	var Hello = {
 		    view: function() {
 		    	return m("main", [
-		            m("h1", {class: "title"}, "Connexion"),
+		            m("h1", {class: "title"}, "Cherche Qqun"),
 		            m("div", {id: "form"}, m(Form)),
 		        ])
 		    }
 		}
+	
+	var Found = {
+			view: function(){
+				return m("div",[
+					m("div",result.properties.username),
+					m("button", {
+			            onclick: function() {
+			                console.log("je vais chercher")
+			            }
+			        })
+			    ])
+			}
+	}
+		
 	
 	
 	var Form = {
@@ -28,15 +42,24 @@
 		                    e.preventDefault()
 		                    m.request({
 					method: "POST",
-		            url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/verifyUser?username="+username+"&password="+password,
+		            url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/getUser?username="+username,
 				}).then(function(result) {
-					if (result.key.name == "userVerified") {
-						console.log("yup");
-						m.route.prefix='';
-						m.route.set('/timeline.html')
-				    }else{
-						console.log("nope");
-					}
+					console.log(result);
+					m.mount(document.body, {
+						view: function(){
+							return m("div",[
+								m("div",result.properties.username),
+								m("button", {
+						            onclick: function() {
+						                console.log("je vais chercher")
+						            }
+						        }, "Follow")
+						    ])
+						}
+				}
+				    
+				    )	
+					
 				})
 		              
 		                }
@@ -44,35 +67,15 @@
 		            	m("label.label", "Username"),
 		                m("input.input[type=text][placeholder=Username]", {
 		                    oninput: function (e) {username = e.target.value},
-		                }),m("label.label", "Password"),
-		                m("input.input[type=password][placeholder=Password]", {
-		                    oninput: function (e) {password = e.target.value},
 		                }),
-		            m("button.button[type=submit]", "Sign in"),
+		            m("button.button[type=submit]", "Search"),
 		        ])
 		    }
 	}
 
 	
 
-var User = {
-		list: [],
-	    loadList: function() {
-	    	console.log("added")
-	    },
-	    current: {},
-	    save: function() {
-	    	console.log("saving...")
-	        return m.request({
-	            method: "POST",
-	            url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/addUser?name="+User.current.name
-	        })
-	        .then(function(result) {
-	        	console.log("got:",result)
-	        })
-	    }
-	}
-	
+
 	var count = 0;
 	
 	/*

@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>First App Mythril</title>
+<title>Instagram</title>
 </head>
 <body>
 
@@ -14,7 +14,7 @@
 	var Hello = {
 		    view: function() {
 		    	return m("main", [
-		            m("h1", {class: "title"}, "Instagram"),
+		            m("h1", {class: "title"}, "Inscription"),
 		            m("div", {id: "form"}, m(Form)),
 		            m("button", {onclick: function() {count++}}, count + " clicks"),
 		        ])
@@ -31,13 +31,13 @@
 					method: "POST",
 		            url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/addUser?name="+name+"&email="+email+"&username="+username+"&password="+password,
 				}).then(function(result) {
-					console.log("ok")
+					console.log(result)
 				})
 		              
 		                }
 		            }, [
 		            	m("label.label", "Email"),
-		                m("input.input[type=text][placeholder=email]", {
+		                m("input.input[type=email][placeholder=email]", {
 		                    oninput: function (e) {email = e.target.value},
 		                }),
 		                m("label.label", "Name"),
