@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Instagram</title>
+<title>TinyInsta</title>
 </head>
 <body>
 
@@ -19,64 +19,50 @@
 		        ])
 		    }
 		}
-	
-	var Found = {
-			view: function(){
-				return m("div",[
-					m("div",result.properties.username),
-					m("button", {
-			            onclick: function() {
-			                console.log("je vais chercher")
-			            }
-			        })
-			    ])
-			}
-	}
-		
+			
 	
 	
 	var Form = {
 			view: function() {
 		        return m("form", {
-		                onsubmit: function(e) {
-		                    e.preventDefault()
-		                    m.request({
-					method: "POST",
-		            url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/getUser?username="+username,
-				}).then(function(result) {
-					console.log(result);
-					m.mount(document.body, {
-						view: function(){
-							return m("div",[
-								m("div",result.properties.username),
-								m("button", {
-						            onclick: function() {
-						                console.log("je vais chercher")
-						            }
-						        }, "Follow")
-						    ])
-						}
-				}
-				    
-				    )	
-					
-				})
-		              
-		                }
-		            }, [
-		            	m("label.label", "Username"),
-		                m("input.input[type=text][placeholder=Username]", {
-		                    oninput: function (e) {username = e.target.value},
-		                }),
+	                onsubmit: function(e) {
+	                    e.preventDefault()
+	                    m.request({
+							method: "POST",
+	            			url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/getUser?username="+username,
+						}).then(function(result) {
+							console.log(result);
+							m.mount(document.body, {
+								view: function(){
+									return m("div",[
+										m("div",result.properties.username),
+										m("button", {
+					            			onclick: function() {
+					                			console.log("je vais chercher");
+					                			m.request({
+													method: "POST",
+	            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/follow?follower="+sessionStorage.getItem("currentUser")+"&followed="+result.properties.username,
+												}).then(function(result) {
+													console.log("marché");
+												})
+					            			}
+					        			}, "Follow")
+					    			])
+								}
+							})
+						})
+	                }
+		        },
+		        [
+					m("label.label", "Username"),
+					m("input.input[type=text][placeholder=Username]", {
+						oninput: function (e) {username = e.target.value},
+					}),
 		            m("button.button[type=submit]", "Search"),
 		        ])
 		    }
 	}
 
-	
-
-
-	var count = 0;
 	
 	/*
 

@@ -119,6 +119,19 @@ public class Endpoint {
 		return user;
 	}
 	
+	@ApiMethod(name = "follow", httpMethod = HttpMethod.POST, path ="follow")
+	public Entity follow(@Named("follower") String follower, @Named("followed") String followed) {
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+		Entity e = new Entity("Follow", follower+"->"+followed);
+		e.setProperty("follower", follower);
+		e.setProperty("followed", followed);
+		
+		datastore.put(e);
+		
+		return new Entity("Response", "ok");
+	}
+	
 	
 	/*
 	Random r=new Random();
