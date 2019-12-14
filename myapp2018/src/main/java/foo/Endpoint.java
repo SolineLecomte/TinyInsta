@@ -1,6 +1,8 @@
 package foo;
 
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
@@ -62,6 +64,7 @@ public class Endpoint {
 		e.setProperty("email", email);
 		e.setProperty("username", username);
 		e.setProperty("password", password);
+		e.setProperty("nbPost",0);
 
 		datastore.put(e);
 		
@@ -105,7 +108,7 @@ public class Endpoint {
 	}
 	
 	
-	@ApiMethod(name = "getUser", httpMethod = HttpMethod.POST, path ="getUser")
+	@ApiMethod(name = "getUser", httpMethod = HttpMethod.GET, path ="getUser")
 	public Entity getUser(@Named("username") String username) {
 		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
@@ -130,6 +133,82 @@ public class Endpoint {
 		datastore.put(e);
 		
 		return new Entity("Response", "ok");
+	}
+	
+	
+	@ApiMethod(name = "post", httpMethod = HttpMethod.POST, path ="post")
+	public Entity post(@Named("user") String user, BodyUtils content) {
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+		Query q =
+			    new Query("User")
+			        .setFilter(new FilterPredicate("__key__" , FilterOperator.EQUAL, KeyFactory.createKey("User", user)));
+
+			PreparedQuery pq = datastore.prepare(q);
+			Entity currentUser = pq.asSingleEntity();
+		
+		long postCount = (long) currentUser.getProperty("nbPost") + 1;
+		Date date = new Date();
+		
+		//Update the user's number of posts
+		currentUser.setProperty("nbPost", postCount);
+		datastore.put(currentUser);
+				
+		//Create the post
+		String postId = user+"_"+postCount;
+
+		Entity e = new Entity("Post", user+"_"+postId);
+		e.setProperty("user", user);
+		e.setProperty("date", date);
+		e.setProperty("image", content.getImage());
+		e.setProperty("text", content.getText());
+		e.setProperty("likes", 0);
+		e.setProperty("id", postId);
+		datastore.put(e);
+		
+		return new Entity("Response", "ok");
+	}
+	
+	
+	@ApiMethod(name = "timeline", httpMethod = HttpMethod.GET, path ="timeline")
+	public List<Entity> timeline(@Named("user") String user) {
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+		Query q =
+			    new Query("Follow")
+			        .setFilter(new FilterPredicate("follower", FilterOperator.EQUAL, user));
+
+			PreparedQuery pq = datastore.prepare(q);
+			List<Entity> allFollowed = pq.asList(FetchOptions.Builder.withLimit(10));
+			
+			List<Entity> allTimelinePosts = new ArrayList<Entity>();
+			
+			
+		for(Entity e : allFollowed) {
+			Query q1 =
+				    new Query("Post")
+				        .setFilter(new FilterPredicate("user", FilterOperator.EQUAL, e.getProperty("followed")));
+
+				PreparedQuery pq1 = datastore.prepare(q1);
+				List<Entity> allPosts = pq1.asList(FetchOptions.Builder.withLimit(10));
+				
+				allTimelinePosts.addAll(allPosts);
+		}
+			
+			
+		return allTimelinePosts;
+
+/*
+		List<Entity> allFollowed = pq.asList(FetchOptions.Builder.withLimit(10).offset(2*10));
+        List<Entity> result = new ArrayList<Entity>();
+
+        for(Entity e : allFollowed) {
+        	result.add(e);
+        }
+		
+        System.out.println(result);
+		return result;
+		*/
 	}
 	
 	

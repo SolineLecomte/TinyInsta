@@ -16,6 +16,10 @@
 		    	return m("main", [
 		            m("h1", {class: "title"}, "Cherche Qqun"),
 		            m("div", {id: "form"}, m(Form)),
+		            m("h1", {class: "title"}, "Post"),
+		            m("div", {id: "form"}, m(FormPost)),
+		            m("h1", {class: "title"}, "Timeline"),
+		            m("div", {id: "timeline"}, m(Timeline)),
 		        ])
 		    }
 		}
@@ -28,7 +32,7 @@
 	                onsubmit: function(e) {
 	                    e.preventDefault()
 	                    m.request({
-							method: "POST",
+							method: "GET",
 	            			url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/getUser?username="+username,
 						}).then(function(result) {
 							console.log(result);
@@ -62,6 +66,85 @@
 		        ])
 		    }
 	}
+	
+	
+	var FormPost = {
+			view: function() {
+		        return m("form", {
+	                onsubmit: function(e) {
+	                    e.preventDefault()
+	                    m.request({
+							method: "POST",
+	            			url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/post?user="+sessionStorage.getItem("currentUser"),
+	            			body: {
+	            				"image":image,
+	            				"text":text
+	            			}
+						}).then(function(result) {
+							console.log(result);
+						})
+	                }
+		        },
+		        [
+		        	m("label.label", "Image"),
+					m("input.input[type=file][accept=image/*]", {
+						onchange: function (e) {
+							var file = e.target.files[0];
+							var reader = new FileReader();
+				            reader.readAsDataURL(file);
+				            image = reader.result
+
+				            reader.onloadend = function(e) {
+				                console.log("oui "+ e.result);
+				            }},
+
+					}),
+		        	m("label.label", "Text"),
+					m("input.input[type=text][placeholder=Your caption here...]", {
+						oninput: function (e) {text = e.target.value},
+					}),
+		            m("button.button[type=submit]", "Post"),
+		        ])
+		    }
+	}
+	
+	/*
+	var Timeline = {
+			view: function() {
+		    	return m("div",{
+		    		fetch: function() {
+		                m.request({
+								method: "POST",
+		            			url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/timeline?user="+sessionStorage.getItem("currentUser"),
+						}).then(function(result) {
+							console.log(result);
+						})
+		    		}
+		    	})
+			}
+	}*/
+	
+	
+	var Data = {
+		    todos: {
+		        list: [],
+		        fetch: function() {
+	                m.request({
+							method: "GET",
+	            			url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/timeline?user="+sessionStorage.getItem("currentUser"),
+					}).then(function(result) {
+						console.log(result);
+					})
+	    		}
+		    }
+		}
+
+		var Timeline = {
+		    oninit: Data.todos.fetch,
+		    view: function() {
+				return "boob";
+				}
+		    }
 
 	
 	/*
