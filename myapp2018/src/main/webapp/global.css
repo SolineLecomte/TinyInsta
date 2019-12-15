@@ -1,0 +1,110 @@
+@charset "ISO-8859-1";
+
+*{
+	font-family:"Verdana";
+	text-align:center;
+	color:#333333;
+}
+
+* h1{
+	font-family:"Arial";
+	font-weight: 500;
+}
+
+.homeDiv , .logDiv, .signUpDiv{
+	background-color:#EFEFEF;
+	width:30%;
+	padding-bottom:1%;
+	border-radius: 25px;
+	display:inline-block;
+	position: fixed;
+	top: 50%;
+  	left: 50%;
+  	-ms-transform: translate(-50%, -50%);
+  	transform: translate(-50%, -50%);
+}
+
+.resultSearch{
+	background-color:#EFEFEF;
+	width:20%;
+	border-radius: 25px;
+	display:inline-block;
+	padding-bottom:1%;
+	
+}
+
+.resultSearch h2{
+	font-weight:500;
+}
+
+.logButton, .signupButton{
+	font-size:15px;
+}
+
+.followButton{
+	margin:1%;
+	font-size:14px;
+}
+
+.logInput, .signupInput{
+	margin-bottom:5%;
+}
+
+.homeLink{
+	border-radius: 10px;
+	display:inline-block;
+	background-color:#DDDDDD;
+	padding:2%;
+	margin:2%;
+}
+
+.homeLink:hover{
+	background-color:white;
+}
+
+.in-line{
+	display:inline-block;
+}
+
+.homepageFormButton{
+	margin:10px;
+	font-size:14px;
+}
+
+.center{
+	text-align:center;
+}
+
+.postContainer{
+	background-color:#f7f7f7;
+	width:70%;
+	display:inline-block;
+	margin-bottom:5%;
+	border-radius: 25px;
+}
+
+.postTitle{
+	font-weight:bold;
+	font-family:"Arial";
+	padding-top:10px;
+	
+}
+
+.subInfo{
+	padding-top:1%;
+	font-size:14px;
+	color:#666666;
+}
+
+.likeDiv{
+	margin:2%;
+}
+
+.likeNumber{
+	padding-left: 5px;
+	padding-right : 5px;
+}
+
+.image{
+	padding-top:2%;
+}

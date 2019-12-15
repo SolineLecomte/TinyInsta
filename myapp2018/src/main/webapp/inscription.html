@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>TinyInsta</title>
+<link rel="stylesheet" href="global.css">
 </head>
 <body>
 
@@ -11,112 +12,55 @@
 	<script src="https://unpkg.com/mithril/mithril.js"></script>
 	<script>	
 	
-	var Hello = {
-		    view: function() {
-		    	return m("main", [
-		            m("h1", {class: "title"}, "Inscription"),
-		            m("div", {id: "form"}, m(Form)),
-		        ])
-		    }
-		}
-	
-	
-	var Form = {
-			view: function() {
-		        return m("form", {
-		                onsubmit: function(e) {
-		                    e.preventDefault()
-		                    m.request({
-					method: "POST",
-		            url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/addUser?name="+name+"&email="+email+"&username="+username+"&password="+password,
-				}).then(function(result) {
-					console.log(result)
-				})
-		              
-		                }
-		            }, [
-		            	m("label.label", "Email"),
-		                m("input.input[type=email][placeholder=email]", {
-		                    oninput: function (e) {email = e.target.value},
-		                }),
-		                m("label.label", "Name"),
-		                m("input.input[type=text][placeholder=Full Name]", {
-		                    oninput: function (e) {name = e.target.value},
-		                }),
-		                m("label.label", "Username"),
-		                m("input.input[type=text][placeholder=Username]", {
-		                    oninput: function (e) {username = e.target.value},
-		                }),m("label.label", "Password"),
-		                m("input.input[type=password][placeholder=Password]", {
-		                    oninput: function (e) {password = e.target.value},
-		                }),
-		            m("button.button[type=submit]", "Sign up"),
-		        ])
-		    }
-	}
-
-	
-
-var User = {
-		list: [],
-	    loadList: function() {
-	    	console.log("added")
-	    },
-	    current: {},
-	    save: function() {
-	    	console.log("saving...")
-	        return m.request({
-	            method: "POST",
-	            url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/addUser?name="+User.current.name
-	        })
-	        .then(function(result) {
-	        	console.log("got:",result)
-	        })
-	    }
-	}
-	
-	var count = 0;
-	
-	/*
-
-var ScoreView = {
-		oninit: Score.loadList,
-	    view: function() {
-	        return m(".user-list", Score.list.map(function(item) {
-	            return m(".user-list-item", item.properties.name + " " + item.properties.score)
-	        }))
-	    },
-		
+var Hello = {
+    view: function() {
+    	return m("main",  m(Form))
+    }
 }
-
-
-
-
-
-
+	
+	
 var Form = {
 		view: function() {
-	        return m("form", {
+	        return m("div.signUpDiv",[
+	        	m("h1", {class: "title"}, "Sign Up"),
+	        	m("form", {
 	                onsubmit: function(e) {
 	                    e.preventDefault()
-	                    Score.save()
+	                    m.request({
+							method: "POST",
+	            			url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/addUser?name="+name+"&email="+email+"&username="+username+"&password="+password,
+						}).then(function(result) {
+							m.route.prefix='';
+							m.route.set('/index.html')
+						})
 	                }
-	            }, [
-	            m("label.label", "score"),
-	            m("input.input[type=int][placeholder=score]",{
-	                oninput: function (e) {Score.current.score=e.target.value},
-	                value: Score.current.score
-	            }),
-	            m("label.label", "name"),
-	            m("input.input[type=text][placeholder=name]", {
-	                oninput: function (e) {Score.current.name=e.target.value},
-	                value: Score.current.name
-	            }),
-	            m("button.button[type=submit]", "Save"),
-	        ])
+		        }, [
+	            	m("label.label", "Email : "),
+	                m("input.signupInput.input[type=email][placeholder=Email]", {
+	                    oninput: function (e) {email = e.target.value},
+	                }),
+	                m("br"),
+	                m("label.label", "Name : "),
+	                m("input.signupInput.input[type=text][placeholder=Full Name]", {
+	                    oninput: function (e) {name = e.target.value},
+	                }),
+	                m("br"),
+	                m("label.label", "Username : "),
+	                m("input.signupInput.input[type=text][placeholder=Username]", {
+	                    oninput: function (e) {username = e.target.value},
+	                }),
+	                m("br"),
+	                m("label.label", "Password : "),
+	                m("input.signupInput.input[type=password][placeholder=Password]", {
+	                    oninput: function (e) {password = e.target.value},
+	                }),
+	                m("br"),
+		            m("button.signupButton.button[type=submit]", "Sign up"),
+		        ])
+	        ])  
 	    }
-}
-*/
+	}
+
 m.mount(document.body, Hello)	
 
 

@@ -2,13 +2,12 @@ package foo;
 
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
-import java.util.Random;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
-import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.config.Named;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -18,13 +17,12 @@ import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.KeyFactory;
 
-import com.google.appengine.api.datastore.PreparedQuery.TooManyResultsException;
-import com.google.appengine.api.datastore.Query.CompositeFilter;
 import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.api.server.spi.config.ApiMethod.HttpMethod;
+
 
 
 @Api(name = "myApi",
@@ -48,8 +46,8 @@ public class Endpoint {
 		Query q2 =
 			    new Query("User")
 			        .setFilter(new FilterPredicate("__key__" , FilterOperator.EQUAL, KeyFactory.createKey("User", email))); 
-		PreparedQuery pq2 = datastore.prepare(q);
-		int mailAlreadyTaken = pq.countEntities(FetchOptions.Builder.withLimit(1));
+		PreparedQuery pq2 = datastore.prepare(q2);
+		int mailAlreadyTaken = pq2.countEntities(FetchOptions.Builder.withLimit(1));
 
 		if(usernameAlreadyTaken!=0) {
 			throw new Exception("Username already taken");
@@ -59,16 +57,20 @@ public class Endpoint {
 			throw new Exception("This email adress is already in use");
 		}
 		
+				
+		String key = PasswordUtils.getSecurePassword(password);
+		
+		
 		Entity e = new Entity("User", username);
 		e.setProperty("name", name);
 		e.setProperty("email", email);
 		e.setProperty("username", username);
-		e.setProperty("password", password);
+		e.setProperty("password", key);
 		e.setProperty("nbPost",0);
 
 		datastore.put(e);
 		
-		return new Entity("Response", "userVerified");
+		return new Entity("Response", "ok");
 	}
 	
 	
@@ -88,23 +90,24 @@ public class Endpoint {
 				PreparedQuery pq = datastore.prepare(q);
 				Entity user = pq.asSingleEntity();
 				
-				//Verify the password
-				String registeredPassword = (String) user.getProperty("password");
-				boolean isCorrectPassword = (password.equals(registeredPassword));
-				
-				if (isCorrectPassword) {
-					return new Entity("Response", "userVerified");
-				} else {
-					throw new Exception("Bad password");
+				if(user!=null) {
+					//Verify the password
+					String registeredPassword = (String) user.getProperty("password");
+					
+					
+					boolean isCorrectPassword = PasswordUtils.verifyPassword(registeredPassword, password);
+					
+					
+					if (isCorrectPassword) {
+						return new Entity("Response", "userVerified");
+					} else {
+						return new Entity("Response", "wrongPassword");
+					}
+				}else {
+					return new Entity("Response", "notFound");
 				}
 				
-
-	}
-	
-	@ApiMethod(name = "timeline", httpMethod = HttpMethod.POST, path ="timeline")
-	public Entity showTimeline() {
-			
-		return new Entity("Response", "ok");
+				
 	}
 	
 	
@@ -119,7 +122,35 @@ public class Endpoint {
 			PreparedQuery pq = datastore.prepare(q);
 			Entity user = pq.asSingleEntity();
 			
-		return user;
+		if(user!=null) {
+			return user;
+		}else {
+			return new Entity("Response","notFound");
+		}
+	}
+	
+	
+	@ApiMethod(name = "isFollowed", httpMethod = HttpMethod.GET, path ="isfollowed")
+	public Entity isfollowed(@Named("follower") String follower, @Named("followed") String followed) {
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+		Filter f1 = new FilterPredicate("follower", FilterOperator.EQUAL, follower);
+		Filter f2 = new FilterPredicate("followed", FilterOperator.EQUAL, followed);
+		Filter final1 = CompositeFilterOperator.and(f1,f2);
+		
+		Query q0 =
+			    new Query("Follow")
+			        .setFilter(final1);
+
+		PreparedQuery pq0 = datastore.prepare(q0);
+		Entity result = pq0.asSingleEntity();
+			
+		if(result!=null) {
+			return new Entity("Response", "yes");
+
+		}else {
+			return new Entity("Response", "nope");
+		}
 	}
 	
 	@ApiMethod(name = "follow", httpMethod = HttpMethod.POST, path ="follow")
@@ -131,6 +162,26 @@ public class Endpoint {
 		e.setProperty("followed", followed);
 		
 		datastore.put(e);
+		
+		return new Entity("Response", "ok");
+	}
+	
+	@ApiMethod(name = "unfollow", httpMethod = HttpMethod.POST, path ="unfollow")
+	public Entity unfollow(@Named("unfollower") String unfollower, @Named("unfollowed") String unfollowed) {
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+		Filter f1 = new FilterPredicate("follower", FilterOperator.EQUAL, unfollower);
+		Filter f2 = new FilterPredicate("followed", FilterOperator.EQUAL, unfollowed);
+		Filter final1 = CompositeFilterOperator.and(f1,f2);
+		
+		Query q0 =
+			    new Query("Follow")
+			        .setFilter(final1);
+
+			PreparedQuery pq0 = datastore.prepare(q0);
+			Entity result = pq0.asSingleEntity();
+		
+		datastore.delete(result.getKey());
 		
 		return new Entity("Response", "ok");
 	}
@@ -148,20 +199,20 @@ public class Endpoint {
 			Entity currentUser = pq.asSingleEntity();
 		
 		long postCount = (long) currentUser.getProperty("nbPost") + 1;
-		Date date = new Date();
 		
 		//Update the user's number of posts
 		currentUser.setProperty("nbPost", postCount);
 		datastore.put(currentUser);
 				
 		//Create the post
+		String date = DateUtils.getDate();
 		String postId = user+"_"+postCount;
 
-		Entity e = new Entity("Post", user+"_"+postId);
+		Entity e = new Entity("Post", postId);
 		e.setProperty("user", user);
 		e.setProperty("date", date);
 		e.setProperty("image", content.getImage());
-		e.setProperty("text", content.getText());
+		e.setProperty("text", content.getMessage());
 		e.setProperty("likes", 0);
 		e.setProperty("id", postId);
 		datastore.put(e);
@@ -197,66 +248,93 @@ public class Endpoint {
 			
 			
 		return allTimelinePosts;
+	}
+	
+	
+	@ApiMethod(name = "isLiked", httpMethod = HttpMethod.GET, path ="isliked")
+	public Entity isLiked(@Named("liker") String liker,@Named("liked") String postId) {
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-/*
-		List<Entity> allFollowed = pq.asList(FetchOptions.Builder.withLimit(10).offset(2*10));
-        List<Entity> result = new ArrayList<Entity>();
-
-        for(Entity e : allFollowed) {
-        	result.add(e);
-        }
+		//Check the like
+		Filter f1 = new FilterPredicate("liker", FilterOperator.EQUAL, liker);
+		Filter f2 = new FilterPredicate("postId", FilterOperator.EQUAL, postId);
+		Filter final1 = CompositeFilterOperator.and(f1,f2);
 		
-        System.out.println(result);
-		return result;
-		*/
-	}
-	
-	
-	/*
-	Random r=new Random();
+		Query q =
+			    new Query("Like")
+			        .setFilter(final1);
 
-	@ApiMethod(name = "getRandom")
-	public RandomResult random() {
-			return new RandomResult(r.nextInt(6)+1);
-	}
-
-	
-	@ApiMethod(name = "listAllScore")
-	public List<Entity> listAllScoreEntity() {
-			Query q =
-			    new Query("Score");
-
-			DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 			PreparedQuery pq = datastore.prepare(q);
-			List<Entity> result = pq.asList(FetchOptions.Builder.withDefaults());
-			return result;
-	}
-
-
-	@ApiMethod(name = "listScore")
-	public List<Entity> listScoreEntity(@Named("name") String name) {
-			Query q =
-			    new Query("Score")
-			        .setFilter(new FilterPredicate("name", FilterOperator.EQUAL, name));
-
-			DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-			PreparedQuery pq = datastore.prepare(q);
-			List<Entity> result = pq.asList(FetchOptions.Builder.withDefaults());
-			return result;
+			Entity isLiked = pq.asSingleEntity();
+						
+			if(isLiked==null) {
+				return new Entity("Response", "nope");
+			}else {
+				return new Entity("Response", "yes");
+			}
+		
 	}
 	
-	@ApiMethod(name = "addScore")
-	public Entity addScore(@Named("score") int score, @Named("name") String name) {
-			
-			Entity e = new Entity("Score", ""+name+score);
-			e.setProperty("name", name);
-			e.setProperty("score", score);
+	
+	
+	@ApiMethod(name = "like", httpMethod = HttpMethod.POST, path ="like")
+	public Entity like(@Named("liker") String liker,@Named("liked") String postId) {
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-			DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-			datastore.put(e);
-			
-			return  e;
+		//Create the like
+		String likeId = liker+"_"+postId;
+
+		Entity e = new Entity("Like", likeId);
+		e.setProperty("liker", liker);
+		e.setProperty("postId", postId);
+		datastore.put(e);
+		
+		//Add to post's like count
+		Query q =
+			    new Query("Post")
+			        .setFilter(new FilterPredicate("id" , FilterOperator.EQUAL, postId));
+
+			PreparedQuery pq = datastore.prepare(q);
+			Entity post = pq.asSingleEntity();
+		
+		long likeCount = (long) post.getProperty("likes") + 1;
+		
+		//Update the user's number of posts
+		post.setProperty("likes", likeCount);
+		datastore.put(post);
+		
+		return new Entity("Response", "ok");
 	}
-	*/
+	
+	@ApiMethod(name = "unlike", httpMethod = HttpMethod.POST, path ="unlike")
+	public Entity unlike(@Named("unliker") String unliker,@Named("unliked") String postId) {
+		DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
+		//Delete the like
+		Query q0 =
+			    new Query("Like")
+			        .setFilter(new FilterPredicate("postId" , FilterOperator.EQUAL, postId));
+
+			PreparedQuery pq0 = datastore.prepare(q0);
+			Entity like = pq0.asSingleEntity();
+		
+		datastore.delete(like.getKey());
+		
+		//Remove from post's like count
+		Query q =
+			    new Query("Post")
+			        .setFilter(new FilterPredicate("id" , FilterOperator.EQUAL, postId));
+
+			PreparedQuery pq = datastore.prepare(q);
+			Entity post = pq.asSingleEntity();
+		
+		long likeCount = (long) post.getProperty("likes") - 1;
+		
+		//Update the user's number of posts
+		post.setProperty("likes", likeCount);
+		datastore.put(post);
+		
+		return new Entity("Response", "ok");
+	}
+	
 }

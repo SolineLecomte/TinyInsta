@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>TinyInsta</title>
+<link rel="stylesheet" href="global.css">
+</head>
+<body>
+
+
+
+	<script src="https://unpkg.com/mithril/mithril.js"></script>
+	<script>	
+	
+var Hello = {
+    view: function() {
+    	return m("main", [
+            m("h1", {id: "title"}, "Looking for someone?"),
+            m("div", {id: "form"}, m(Form)),
+            m("div", {id: "resultSearch"}),
+            m("h1", {id: "title"}, "Post"),
+            m("div", {id: "form"}, m(FormPost)),
+            m("h1", {id: "title"}, "Your timeline"),
+            m("div", {id: "timeline"}, m(Timeline)),
+        ])
+    }
+}
+			
+	
+	
+var Form = {
+	view: function() {
+		return m("form.center", {
+			onsubmit: function(e) {
+				e.preventDefault()
+				m.request({
+					method: "GET",
+					url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/getUser?username="+username,
+				}).then(function(result) {
+					if(result.key.name=="notFound"){
+						alert("User Not Found");
+					}else{
+						m.mount(resultSearch, {
+							view: function(){
+								return m("div.resultSearch",[
+									m("h2",result.properties.username),
+									m("button.followButton", {
+										onclick: function() {
+											m.request({
+												method: "GET",
+            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/isfollowed?follower="+sessionStorage.getItem("currentUser")+"&followed="+result.properties.username,
+											}).then(function(result2) {
+												console.log(result2);
+												if (result2.key.name == "nope"){
+													m.request({
+														method: "POST",
+		            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/follow?follower="+sessionStorage.getItem("currentUser")+"&followed="+result.properties.username,
+													}).then(function(result3) {
+														console.log("Follow ok");
+													})
+												}else{
+													alert("You are already following this user.");
+												}
+											})					                			
+				            			}
+				        			}, "Follow"),
+				        			m("button.followButton", {
+				            			onclick: function() {
+				            				m.request({
+												method: "GET",
+            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/isfollowed?follower="+sessionStorage.getItem("currentUser")+"&followed="+result.properties.username,
+											}).then(function(result4) {
+												console.log(result4);
+												if (result4.key.name == "yes"){
+													m.request({
+														method: "POST",
+		            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/unfollow?unfollower="+sessionStorage.getItem("currentUser")+"&unfollowed="+result.properties.username,
+													}).then(function(result5) {
+														console.log("Unfollow ok");
+													})
+												}else{
+													alert("You're not following this user.");
+												}
+											})	
+				            			}
+				        			}, "Unfollow")
+				    			])
+							}
+						})
+					}
+				})
+			}
+        },[
+			m("label.label", {
+				class:"formSearch"
+			},"Username : "),
+			m("input.input[type=text][placeholder=Username]", {
+				class:"formSearch",
+				oninput: function (e) {username = e.target.value},
+			}),
+			m("br"),
+            m("button.button[type=submit]", {
+				class:"homepageFormButton"
+			},"Search"),
+       	])
+    }
+}
+	
+	
+var FormPost = {
+	view: function() {
+        return m("form.center", {
+        	onsubmit: function(e) {
+            	e.preventDefault()
+				m.request({
+					method: "POST",
+					url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/post?user="+sessionStorage.getItem("currentUser"),
+					body: {
+           				"image":reader.result,
+           				"message":text,
+           			}
+				}).then(function(result) {
+					console.log("Post ok");
+				})
+            }
+        },[
+        	m("label.label", "Picture to upload : "),
+			m("input.input[type=file][accept=image/*]", {
+				onchange: function (e) {
+					var file = e.target.files[0];
+					reader = new FileReader();
+                	reader.onloadend = function() {
+                		console.log("load ");
+              	  	}
+                	reader.readAsDataURL(file);
+				}
+			}),
+        	m("label.label", "Your message : "),
+			m("input.input[type=text][placeholder=Your caption here...]", {
+				oninput: function (e) {text = e.target.value},
+			}),
+			m("br"),
+            m("button.button[type=submit]",{
+				class:"homepageFormButton"
+            }, "Post"),
+        ])
+    }
+}
+
+
+var Timeline = {
+    view: function() {
+        return m("div", {
+        	oninit: function() {
+           		m.request({
+					method: "GET",
+           			url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/timeline?user="+sessionStorage.getItem("currentUser"),
+				}).then(function(result) {
+					m.mount(timeline, {
+						view: function(){
+							return result.items.map(function(p) {
+								return m("div.center.postContainer",[
+									m("div.postTitle",p.properties.text),
+									m("div.subInfo","Posted by : "+ p.properties.user+", on the "+p.properties.date),
+									m("img.image", {src: p.properties.image.value}),
+									m("br"),
+									m("div.likeDiv",[
+										m("button.formButton", {
+											class:"in-line",
+					            			onclick: function() {
+					            				m.request({
+													method: "GET",
+	            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/isliked?liker="+sessionStorage.getItem("currentUser")+"&liked="+p.properties.id,
+												}).then(function(result) {
+													if (result.key.name == "nope"){
+														m.request({
+															method: "POST",
+			            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/like?liker="+sessionStorage.getItem("currentUser")+"&liked="+p.properties.id,
+														}).then(function(result) {
+															var selector = document.getElementById(p.properties.id+"_likes")
+															var nblikes = parseInt(selector.innerHTML);
+															selector.innerHTML=nblikes+1;
+														})
+													}else{
+														alert("You've already liked this post");
+													}
+												})
+					            			}
+					        			}, "Like"),
+										m("div.in-line.likeNumber",{id: p.properties.id+"_likes"},p.properties.likes),
+					        			m("button.formButton", {
+					        				class:"in-line",
+					            			onclick: function() {
+					            				m.request({
+													method: "GET",
+	            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/isliked?liker="+sessionStorage.getItem("currentUser")+"&liked="+p.properties.id,
+												}).then(function(result) {
+													if (result.key.name == "yes"){
+														m.request({
+															method: "POST",
+			            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/unlike?unliker="+sessionStorage.getItem("currentUser")+"&unliked="+p.properties.id,
+														}).then(function(result) {
+															var selector = document.getElementById(p.properties.id+"_likes")
+															var nblikes = parseInt(selector.innerHTML);
+															selector.innerHTML=nblikes-1;
+														})
+													}else{
+														alert("You haven't liked this post yet");
+													}
+												})
+					            			}
+					        			}, "Unlike")
+									])
+								])
+							})
+						}
+					})
+				})
+			}
+        })
+    }
+}
+
+
+m.mount(document.body, Hello)	
+
+
+</script>
+</body>
+</html>
