@@ -56,7 +56,7 @@ var Form = {
 														method: "POST",
 		            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/follow?follower="+sessionStorage.getItem("currentUser")+"&followed="+result.properties.username,
 													}).then(function(result3) {
-														console.log("Follow ok");
+														alert("You are now following "+result.properties.username);
 													})
 												}else{
 													alert("You are already following this user.");
@@ -76,7 +76,7 @@ var Form = {
 														method: "POST",
 		            									url: "https://abstract-mode-260514.appspot.com/_ah/api/myApi/v1/unfollow?unfollower="+sessionStorage.getItem("currentUser")+"&unfollowed="+result.properties.username,
 													}).then(function(result5) {
-														console.log("Unfollow ok");
+														alert("You are not following "+result.properties.username+" anymore.");
 													})
 												}else{
 													alert("You're not following this user.");
@@ -120,7 +120,7 @@ var FormPost = {
            				"message":text,
            			}
 				}).then(function(result) {
-					console.log("Post ok");
+					alert("Your post has been uploaded.")
 				})
             }
         },[
