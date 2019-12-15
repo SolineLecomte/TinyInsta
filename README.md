@@ -1,1 +1,1 @@
-![User Kind](images/UserKind.png)
+![User Kind](screenshots/UserKind.png)
